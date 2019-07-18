@@ -4,11 +4,12 @@ import (
 	"strconv"
 	"strings"
 	"errors"
+	"regexp"
 )
 
 func eval(text string) error {
 
-	s := strings.Split(strings.TrimSpace(text)," ")
+	s := strings.Split(trim(text)," ")
 	if (len(s)<3){
 		return errors.New("Too few arguments")
 	}
@@ -43,6 +44,11 @@ func eval(text string) error {
 	default: return errors.New("Wrong operator")
 	}
 	return nil
+}
+
+func trim(text string) string {
+	space := regexp.MustCompile(`\s+`)
+	return space.ReplaceAllString(text, " ")
 }
 
 func divide(n1 int, n2 int) (float64, error){
