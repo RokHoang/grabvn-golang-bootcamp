@@ -19,12 +19,13 @@ func eval(text string) error {
 	}
 
 	t1,op,t2 := s[0], s[1], s[2]
-	n1, errN1 := strconv.Atoi(t1)
-	n2, errN2 := strconv.Atoi(t2)
 
+	n1, errN1 := strconv.Atoi(t1)
 	if (errN1 != nil){
 		return errN1
 	}
+
+	n2, errN2 := strconv.Atoi(t2)
 	if (errN2 != nil){
 		return errN2
 	}
@@ -53,7 +54,7 @@ func trim(text string) string {
 
 func divide(n1 int, n2 int) (float64, error){
 	if (n2 == 0){
-		return 0.0,errors.New("Cannot be divided by 0 (zero)")
+		return 0,errors.New("Cannot be divided by 0 (zero)")
 	}
 
 	return float64(n1)/float64(n2),nil
