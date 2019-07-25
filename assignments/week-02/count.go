@@ -33,7 +33,7 @@ func producer(text string, pipe chan map[string]int, wg *sync.WaitGroup) {
 	wordCount := countWord(text)
 	//fmt.Println("Raw:", text)
 	fmt.Println("Count:", wordCount)
-	sendWordCount(wordCount, pipe)
+	pipe <- wordCount
 	wg.Done()
 }
 
@@ -45,8 +45,4 @@ func countWord(text string) map[string]int {
 		wordCountMap[word]++
 	}
 	return wordCountMap
-}
-
-func sendWordCount(wordCountMap map[string]int, pipe chan map[string]int) {
-	pipe <- wordCountMap
 }
