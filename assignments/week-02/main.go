@@ -44,6 +44,8 @@ func readFromDirectory() {
 	var wgConsumer sync.WaitGroup
 	pipe := make(chan map[string]int)
 
+	go consumer(pipe, &wgConsumer)
+
 	var root string
 	fmt.Print("Please type the directory: ")
 	fmt.Scanln(&root)
@@ -54,7 +56,6 @@ func readFromDirectory() {
 	}
 	fmt.Println("There are file paths: ", filePaths)
 
-	go consumer(pipe, &wgConsumer)
 	for _, filePath := range filePaths {
 		wgProducer.Add(1)
 		text, err := ioutil.ReadFile(filePath)
@@ -65,7 +66,8 @@ func readFromDirectory() {
 			wgProducer.Done()
 		}
 	}
-	closePipe(pipe, &wgProducer)
+	wgProducer.Wait()
+	close(pipe)
 	waitResult(&wgConsumer)
 }
 
@@ -73,13 +75,16 @@ func readFromTerminal() {
 	var wgProducer sync.WaitGroup
 	var wgConsumer sync.WaitGroup
 	pipe := make(chan map[string]int)
+
 	go consumer(pipe, &wgConsumer)
+
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		text := scanner.Text()
 		wgProducer.Add(1)
 		go producer(text, pipe, &wgProducer)
 	}
-	closePipe(pipe, &wgProducer)
+	wgProducer.Wait()
+	close(pipe)
 	waitResult(&wgConsumer)
 }

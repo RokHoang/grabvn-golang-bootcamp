@@ -23,15 +23,15 @@ func consumer(pipe chan map[string]int, wg *sync.WaitGroup) {
 		for word, count := range wordCount {
 			finalCounter[word] += count
 		}
-		fmt.Println("+++Result:", finalCounter)
+		fmt.Println("Result:", finalCounter)
 	}
-	fmt.Println("++++++Final Result:", finalCounter)
+	fmt.Println("Final Result:", finalCounter)
 	wg.Done()
 }
 
 func producer(text string, pipe chan map[string]int, wg *sync.WaitGroup) {
 	wordCount := countWord(text)
-	fmt.Println("Raw:", text)
+	//fmt.Println("Raw:", text)
 	fmt.Println("Count:", wordCount)
 	sendWordCount(wordCount, pipe)
 	wg.Done()
