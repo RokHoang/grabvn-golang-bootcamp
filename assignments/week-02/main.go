@@ -66,7 +66,6 @@ func readFromDirectory() {
 		}
 	}
 	closePipe(pipe, &wgProducer)
-	wgConsumer.Add(1)
 	waitResult(&wgConsumer)
 }
 
@@ -82,6 +81,5 @@ func readFromTerminal() {
 		go producer(text, pipe, &wgProducer)
 	}
 	closePipe(pipe, &wgProducer)
-	wgConsumer.Add(1)
 	waitResult(&wgConsumer)
 }

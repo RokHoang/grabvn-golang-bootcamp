@@ -12,6 +12,7 @@ func closePipe(pipe chan map[string]int, wg *sync.WaitGroup) {
 }
 
 func waitResult(wg *sync.WaitGroup) {
+	wg.Add(1)
 	wg.Wait()
 }
 
