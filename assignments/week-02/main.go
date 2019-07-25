@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
-	"strings"
+	"sync"
 )
 
 type Pair struct {
@@ -13,45 +16,72 @@ type Pair struct {
 }
 
 func main() {
-	scanner := bufio.NewScanner(os.Stdin)
-	pipe := make(chan map[string]int)
-	finalCounter := make(map[string]int)
-	go consumer(pipe, finalCounter)
+	readTerminal := flag.Bool("terminal", false, "read from terminal")
+	flag.Parse()
+	if *readTerminal {
+		//for testing with terminal run the command "go run *.go -terminal"
+		readFromTerminal()
+	} else {
+		//else "go run *.go"
+		readFromDirectory()
+	}
+}
 
-	fmt.Print("> ")
+func listAllFilesInDirectory(root string) ([]string, error) {
+	files, err := ioutil.ReadDir(root)
+	if err != nil {
+		return nil, err
+	}
+	var filePaths []string
+	for _, file := range files {
+		filePaths = append(filePaths, file.Name())
+	}
+	return filePaths, nil
+}
+
+func readFromDirectory() {
+	var wgProducer sync.WaitGroup
+	var wgConsumer sync.WaitGroup
+	pipe := make(chan map[string]int)
+
+	var root string
+	fmt.Print("Please type the directory: ")
+	fmt.Scanln(&root)
+	filePaths, err := listAllFilesInDirectory(root)
+	if err != nil {
+		log.Fatal("ERROR:", err)
+		return
+	}
+	fmt.Println("There are file paths: ", filePaths)
+
+	go consumer(pipe, &wgConsumer)
+	for _, filePath := range filePaths {
+		wgProducer.Add(1)
+		text, err := ioutil.ReadFile(filePath)
+		if err == nil {
+			go producer(string(text), pipe, &wgProducer)
+		} else {
+			fmt.Println("Cannot read text from", filePath)
+			wgProducer.Done()
+		}
+	}
+	closePipe(pipe, &wgProducer)
+	wgConsumer.Add(1)
+	waitResult(&wgConsumer)
+}
+
+func readFromTerminal() {
+	var wgProducer sync.WaitGroup
+	var wgConsumer sync.WaitGroup
+	pipe := make(chan map[string]int)
+	go consumer(pipe, &wgConsumer)
+	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		text := scanner.Text()
-		go producer(text, pipe)
-
+		wgProducer.Add(1)
+		go producer(text, pipe, &wgProducer)
 	}
-}
-
-func consumer(pipe chan map[string]int, finalCounter map[string]int) {
-	for wordCount := range pipe {
-		for word, count := range wordCount {
-			finalCounter[word] += count
-		}
-		fmt.Println("Result:", finalCounter)
-		fmt.Print("> ")
-	}
-}
-
-func producer(text string, pipe chan map[string]int) {
-	wordCount := countWord(text)
-	fmt.Println(wordCount)
-	sendWordCount(wordCount, pipe)
-}
-
-func countWord(text string) map[string]int {
-	words := strings.Fields(text)
-	wordCountMap := make(map[string]int)
-
-	for _, word := range words {
-		wordCountMap[word]++
-	}
-	return wordCountMap
-}
-
-func sendWordCount(wordCountMap map[string]int, pipe chan map[string]int) {
-	pipe <- wordCountMap
+	closePipe(pipe, &wgProducer)
+	wgConsumer.Add(1)
+	waitResult(&wgConsumer)
 }
