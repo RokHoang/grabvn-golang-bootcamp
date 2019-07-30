@@ -58,9 +58,8 @@ func (w Worker) start() {
 		//step 1
 		w.pool <- w.job
 		//step 3
-		value := <-w.job
-		// value.Print(w.index)
+		action := <-w.job
 		fmt.Println("This is worker:", w.index)
-		value.Do()
+		action.Do()
 	}
 }
