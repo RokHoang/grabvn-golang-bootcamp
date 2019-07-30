@@ -10,10 +10,7 @@ import (
 	"sync"
 )
 
-type Pair struct {
-	word  string
-	count int
-}
+const NumberOfWorker = 2
 
 func main() {
 	readTerminal := flag.Bool("terminal", false, "read from terminal")
@@ -56,13 +53,16 @@ func readFromDirectory() {
 	}
 	fmt.Println("There are file paths: ", filePaths)
 
+	workerPool := NewWorkerPool(NumberOfWorker)
 	for _, filePath := range filePaths {
 		wgProducer.Add(1)
 		text, err := ioutil.ReadFile(filePath)
 		if err == nil {
-			go producer(string(text), pipe, &wgProducer)
+			// go producer(string(text), pipe, &wgProducer)
+			workerPool.dispatch(Producer{producer, string(text), pipe, &wgProducer})
 		} else {
 			fmt.Println("Cannot read text from", filePath)
+			fmt.Println(err)
 			wgProducer.Done()
 		}
 	}
