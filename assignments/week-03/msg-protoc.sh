@@ -1,0 +1,1 @@
+protoc -I CustomerFeedback/ CustomerFeedback/CustomerFeedback.proto --go_out=plugins=grpc:CustomerFeedback
